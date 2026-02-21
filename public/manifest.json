@@ -1,0 +1,50 @@
+{
+    "manifest_version": 3,
+    "name": "Save Link to Notion",
+    "version": "1.0.0",
+    "description": "Zapisuj linki, notatki i rozmawiaj z AI na temat przeglądanej strony bezpośrednio w Notion.",
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+    "action": {
+        "default_popup": "index.html",
+        "default_title": "Zapisz do Notion",
+        "default_icon": {
+            "16": "icon16.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+        }
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
+    },
+    "permissions": [
+        "activeTab",
+        "storage",
+        "scripting",
+        "contextMenus",
+        "alarms"
+    ],
+    "host_permissions": [
+        "*://api.notion.com/",
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "src/background.js",
+        "type": "module"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "src/content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
