@@ -2,6 +2,11 @@
   "name": "save-link-to-notion",
   "private": true,
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mysttic/save-link-to-notion.git"
+  },
+  "homepage": "https://github.com/Mysttic/save-link-to-notion#readme",
   "type": "module",
   "scripts": {
     "dev": "vite",

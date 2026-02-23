@@ -31,4 +31,4 @@ Głównym celem wtyczki jest umożliwienie użytkownikowi **zapisywania linków 
 
 ## Kontakt
 
-W razie pytań dotyczących prywatności lub przetwarzania danych możesz skontaktować się przez repozytorium projektu (np. Issues na GitHubie).
+W razie pytań dotyczących prywatności lub przetwarzania danych możesz skontaktować się przez repozytorium projektu: [https://github.com/Mysttic/save-link-to-notion](https://github.com/Mysttic/save-link-to-notion) (np. Issues).

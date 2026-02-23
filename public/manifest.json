@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Save Link to Notion",
     "version": "1.0.0",
-    "description": "Zapisuj linki, notatki i rozmawiaj z AI na temat przeglądanej strony bezpośrednio w Notion.",
+    "description": "Save links, notes, and chat with AI about the current page directly to your Notion database.",
     "icons": {
         "16": "icon16.png",
         "48": "icon48.png",
@@ -10,7 +10,7 @@
     },
     "action": {
         "default_popup": "index.html",
-        "default_title": "Zapisz do Notion",
+        "default_title": "Save to Notion",
         "default_icon": {
             "16": "icon16.png",
             "48": "icon48.png",
@@ -25,7 +25,6 @@
         "activeTab",
         "storage",
         "scripting",
-        "contextMenus",
         "alarms"
     ],
     "host_permissions": [

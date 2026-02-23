@@ -50,7 +50,7 @@ chrome.runtime.onMessage.addListener((message: any, _sender: chrome.runtime.Mess
             const model = store.aiModel || 'gpt-4o-mini';
 
             if (!apiKey) {
-                sendResponse({ success: false, error: 'Brak klucza API OpenAI. Skonfiguruj go w ustawieniach (Options).' });
+                sendResponse({ success: false, error: 'Missing AI API key. Configure it in Options.' });
                 return;
             }
 

@@ -88,7 +88,7 @@ function App() {
           setStatus('success')
           if (response?.result?.id) {
             setSyncedPageId(response.result.id)
-            setExistingNote(`Zapisano właśnie teraz.`)
+            setExistingNote(`Saved just now.`)
           }
           setTimeout(() => setStatus('idle'), 3000)
         } else {
@@ -155,38 +155,38 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
                   .filter((url: string | null | undefined) => !!url);
 
                 if (urlsToAppend.length === 0) {
-                  setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Nie znaleziono poprawnych ID obrazków w odpowiedzi AI.` }]);
+                  setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] No valid image IDs found in AI response.` }]);
                   return;
                 }
 
                 if (syncedPageId) {
                   chrome.runtime.sendMessage({ type: 'APPEND_BLOCKS', pageId: syncedPageId, urls: urlsToAppend }, (res) => {
                     if (res?.success) {
-                      setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System] Pomyślnie dopięto ${urlsToAppend.length} zdjęć do widoku Notion.` }]);
+                      setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System] Successfully appended ${urlsToAppend.length} image(s) to Notion.` }]);
                     } else {
-                      setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Nie udało się dodać obrazków: ${res?.error}` }]);
+                      setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Failed to add images: ${res?.error}` }]);
                     }
                   });
                 } else {
-                  setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Strona nie jest zapisana w Notion! Zapisz ją najpierw przed kopiowaniem grafik.` }]);
+                  setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Page is not saved in Notion. Save it first before adding images.` }]);
                 }
               } else if (actionJson.type === 'append_text' && actionJson.text) {
                 if (syncedPageId) {
                   chrome.runtime.sendMessage({ type: 'APPEND_TEXT_BLOCKS', pageId: syncedPageId, text: actionJson.text }, (res) => {
                     if (res?.success) {
-                      setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System] Pomyślnie dopięto wygenerowany tekst do widoku Notion.` }]);
+                      setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System] Successfully appended the generated text to Notion.` }]);
                     } else {
-                      setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Nie udało się dodać tekstu: ${res?.error}` }]);
+                      setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Failed to add text: ${res?.error}` }]);
                     }
                   });
                 } else {
-                  setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Strona nie jest zapisana w Notion! Zapisz ją najpierw przed przesyłaniem tekstu.` }]);
+                  setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Page is not saved in Notion. Save it first before adding text.` }]);
                 }
               } else {
                 setChatMessages((prev) => [...prev, { role: 'assistant', content: replyText }])
               }
             } catch (e) {
-              setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Błąd parsowania akcji (model urwał odpowiedź?): ${e}, Raw: ${actionMatch[1].substring(0, 100)}...` }]);
+              setChatMessages((prev) => [...prev, { role: 'assistant', content: `${prefixMsg}[System Error] Failed to parse action (model truncated?): ${e}, Raw: ${actionMatch[1].substring(0, 100)}...` }]);
             }
           } else {
             setChatMessages((prev) => [...prev, { role: 'assistant', content: replyText }])
@@ -209,9 +209,9 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
     if (typeof chrome !== 'undefined' && chrome.runtime) {
       chrome.runtime.sendMessage({ type: 'ADD_COMMENT_TO_PAGE', pageId: syncedPageId, text: text }, (response) => {
         if (response?.success) {
-          alert('Komentarz został zapisany pomyślnie w Notion!');
+          alert('Comment saved successfully in Notion!');
         } else {
-          alert(`Błąd zapisu: ${response?.error}`);
+          alert(`Save error: ${response?.error}`);
         }
       })
     }
@@ -295,7 +295,7 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
               {syncedPageId && status !== 'success' && (
                 <label className="flex items-center justify-center gap-2 mb-3 text-xs text-neutral-300 bg-neutral-800/50 p-2 rounded-lg border border-neutral-700 cursor-pointer hover:bg-neutral-800 transition-colors">
                   <input type="checkbox" className="rounded bg-neutral-900 border-neutral-600 text-indigo-500 focus:ring-indigo-500 cursor-pointer" checked={forceNew} onChange={(e) => setForceNew(e.target.checked)} />
-                  Zapisz osobno (nowy rekord)
+                  Save as new (separate record)
                 </label>
               )}
               {status === 'error' && <p className="text-xs text-red-400 mb-2 truncate text-center" title={errorMsg}>{errorMsg}</p>}
@@ -316,7 +316,7 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
             <div className="flex-1 bg-neutral-800/50 border border-neutral-700 rounded-lg p-3 overflow-y-auto mb-3 flex flex-col gap-3">
               <div className="text-sm text-neutral-300">
                 <span className="bg-indigo-900/50 text-indigo-300 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold mb-1 inline-block">System</span>
-                <p className="opacity-90 leading-relaxed text-[13px]">Agent ma kontekst tej strony. O co chcesz zapytać?</p>
+                <p className="opacity-90 leading-relaxed text-[13px]">The agent has context of this page. What would you like to ask?</p>
               </div>
               {chatMessages.map((msg, idx) => (
                 msg.role !== 'system' && (
@@ -329,7 +329,7 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
                         onClick={() => handleAddComment(msg.content)}
                         className="mt-2 text-[10px] font-bold tracking-wider uppercase bg-neutral-800 border border-neutral-600 px-2 py-1 rounded text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors opacity-0 group-hover:opacity-100"
                       >
-                        + Wyślij do Notion
+                        + Send to Notion
                       </button>
                     )}
                   </div>
@@ -346,7 +346,7 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
                 onChange={(e) => setChatInput(e.target.value)}
                 disabled={isChatLoading}
                 className="w-full bg-neutral-800 border border-neutral-700 rounded-lg pl-3 pr-10 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-shadow disabled:opacity-50"
-                placeholder="Czego dotyczy ta strona?"
+                placeholder="What is this page about?"
               />
               <button
                 type="submit"

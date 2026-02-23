@@ -1,40 +1,49 @@
 # Save Link to Notion
 
-Rozszerzenie do Chrome/Brave, które pozwala zapisywać linki, notatki i rozmawiać z AI na temat przeglądanej strony bezpośrednio do Notion.
+A Chrome/Brave extension that lets you save links, notes, and chat with AI about the current page directly into your Notion database.
 
-## Instalacja
+**Repository:** [https://github.com/Mysttic/save-link-to-notion](https://github.com/Mysttic/save-link-to-notion)
 
-### Z Chrome Web Store (gdy wtyczka będzie opublikowana)
+## Features
 
-1. Wejdź na stronę wtyczki w [Chrome Web Store](https://chrome.google.com/webstore) (link zostanie dodany po publikacji).
-2. Kliknij **Dodaj do Chrome** / **Add to Chrome**.
+- **Save Link** – Save the current page URL, title, description, and optional note to a Notion database. Optionally update an existing page if the URL was already saved.
+- **Ask AI** – Chat with an AI assistant (via OpenRouter) in the context of the current page. The agent can add images or generated text to the saved Notion page when you ask it to.
+- **Settings** – Configure your Notion API key, Database ID, and optional OpenRouter API key and model in the extension options.
 
-### Instalacja ręczna (tryb deweloperski)
+## Screenshot
 
-1. Sklonuj repozytorium i zainstaluj zależności:
+![Extension popup – Save Link and Ask AI tabs](docs/popup-screenshot.png)
+
+*Popup: Save Link tab with page title, URL, optional note, and Save to Database button.*
+
+## Installation
+
+### From Chrome Web Store (when published)
+
+1. Open the extension page in the [Chrome Web Store](https://chrome.google.com/webstore) (link will be added after publication).
+2. Click **Add to Chrome**.
+
+### Manual installation (developer mode)
+
+1. Clone the [repository](https://github.com/Mysttic/save-link-to-notion) and install dependencies:
    ```bash
    npm install
    npm run build
    ```
-2. Otwórz `chrome://extensions/` w Chrome lub Brave.
-3. Włącz **Tryb deweloperski** (Developer mode).
-4. Kliknij **Załaduj rozpakowane** (Load unpacked) i wskaż folder **`dist`** w projekcie.
+2. Open `chrome://extensions/` in Chrome or Brave.
+3. Enable **Developer mode**.
+4. Click **Load unpacked** and select the project **`dist`** folder.
 
-## Rozwój
+## Development
 
-- **Uruchomienie w trybie deweloperskim:** `npm run dev` – potem załaduj folder `dist` w `chrome://extensions/` (odśwież po zmianach).
+- **Run in dev mode:** `npm run dev`, then load the `dist` folder in `chrome://extensions/` (refresh after changes).
 - **Build:** `npm run build`
-- **Pakiet do Chrome Web Store:** `npm run pack` – tworzy plik `save-link-to-notion.zip` gotowy do wgrania w [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+- **Package for Chrome Web Store:** `npm run pack` – creates `save-link-to-notion.zip` for upload in the [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
-## Publikacja w Chrome Web Store
+## Privacy
 
-Pełna instrukcja krok po kroku (rejestracja konta, przygotowanie ZIP, listing, prywatność, recenzja) znajduje się w **[docs/PUBLISHING.md](docs/PUBLISHING.md)**.  
-Przewodnik jest oparty na tym samym podejściu co przy publikacji [Kick.com Chat Monitor](https://github.com/Mysttic/kick-bot-chrome-addon).
+The extension stores data locally (API keys, Notion database ID) and sends it only to Notion and, optionally, to your chosen AI provider (e.g. OpenRouter). It does not collect or send data to the developers’ servers. See **[PRIVACY.md](PRIVACY.md)** for details.
 
-## Prywatność
+## License
 
-Wtyczka przechowuje dane lokalnie (klucze API, ID bazy Notion) i wysyła je wyłącznie do Notion oraz opcjonalnie do wybranej usługi AI (np. OpenRouter). Nie zbiera ani nie wysyła danych do serwerów twórców. Szczegóły: **[PRIVACY.md](PRIVACY.md)**.
-
-## Licencja
-
-MIT (jeśli w projekcie jest plik LICENSE).
+MIT (see LICENSE file if present).

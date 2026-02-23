@@ -13,6 +13,14 @@ dist-ssr
 save-link-to-notion.zip
 *.local
 
+# Environment and secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Private docs (not for public repo)
+docs/PUBLISHING.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -23,4 +31,3 @@ save-link-to-notion.zip
 *.njsproj
 *.sln
 *.sw?
-docs/PUBLISHING.md

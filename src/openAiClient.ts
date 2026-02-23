@@ -14,7 +14,7 @@ export const askOpenAI = async (
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${apiKey}`,
-            'HTTP-Referer': 'https://savelinktonotion.com', // Optional but recommended by OpenRouter
+            'HTTP-Referer': 'https://github.com/Mysttic/save-link-to-notion', // Optional but recommended by OpenRouter
             'X-Title': 'Save Link to Notion Plugin', // Optional
             'Content-Type': 'application/json'
         },
