@@ -1,73 +1,40 @@
-# React + TypeScript + Vite
+# Save Link to Notion
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Rozszerzenie do Chrome/Brave, które pozwala zapisywać linki, notatki i rozmawiać z AI na temat przeglądanej strony bezpośrednio do Notion.
 
-Currently, two official plugins are available:
+## Instalacja
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Z Chrome Web Store (gdy wtyczka będzie opublikowana)
 
-## React Compiler
+1. Wejdź na stronę wtyczki w [Chrome Web Store](https://chrome.google.com/webstore) (link zostanie dodany po publikacji).
+2. Kliknij **Dodaj do Chrome** / **Add to Chrome**.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Instalacja ręczna (tryb deweloperski)
 
-## Expanding the ESLint configuration
+1. Sklonuj repozytorium i zainstaluj zależności:
+   ```bash
+   npm install
+   npm run build
+   ```
+2. Otwórz `chrome://extensions/` w Chrome lub Brave.
+3. Włącz **Tryb deweloperski** (Developer mode).
+4. Kliknij **Załaduj rozpakowane** (Load unpacked) i wskaż folder **`dist`** w projekcie.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Rozwój
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Uruchomienie w trybie deweloperskim:** `npm run dev` – potem załaduj folder `dist` w `chrome://extensions/` (odśwież po zmianach).
+- **Build:** `npm run build`
+- **Pakiet do Chrome Web Store:** `npm run pack` – tworzy plik `save-link-to-notion.zip` gotowy do wgrania w [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Publikacja w Chrome Web Store
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Pełna instrukcja krok po kroku (rejestracja konta, przygotowanie ZIP, listing, prywatność, recenzja) znajduje się w **[docs/PUBLISHING.md](docs/PUBLISHING.md)**.  
+Przewodnik jest oparty na tym samym podejściu co przy publikacji [Kick.com Chat Monitor](https://github.com/Mysttic/kick-bot-chrome-addon).
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Prywatność
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Wtyczka przechowuje dane lokalnie (klucze API, ID bazy Notion) i wysyła je wyłącznie do Notion oraz opcjonalnie do wybranej usługi AI (np. OpenRouter). Nie zbiera ani nie wysyła danych do serwerów twórców. Szczegóły: **[PRIVACY.md](PRIVACY.md)**.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Licencja
+
+MIT (jeśli w projekcie jest plik LICENSE).
