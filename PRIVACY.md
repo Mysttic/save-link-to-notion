@@ -1,6 +1,6 @@
 # Privacy Policy – Save Link to Notion
 
-**Last updated:** 2025
+**Last updated:** 23/2/2026
 
 ## General principles
 
