@@ -2,8 +2,6 @@
 
 A Chrome/Brave extension that lets you save links, notes, and chat with AI about the current page directly into your Notion database.
 
-**Repository:** [https://github.com/Mysttic/save-link-to-notion](https://github.com/Mysttic/save-link-to-notion)
-
 ## Features
 
 - **Save Link** – Save the current page URL, title, description, and optional note to a Notion database. Optionally update an existing page if the URL was already saved.
