@@ -1,34 +1,34 @@
-# Polityka prywatności – Save Link to Notion
+# Privacy Policy – Save Link to Notion
 
-**Ostatnia aktualizacja:** 2025
+**Last updated:** 2025
 
-## Zasady ogólne
+## General principles
 
-Wtyczka **Save Link to Notion** jest zaprojektowana tak, aby minimalizować przetwarzanie danych i nie zbierać informacji o użytkowniku poza tym, co jest konieczne do działania funkcji zapisu do Notion i opcjonalnej rozmowy z AI.
+The **Save Link to Notion** extension is designed to minimise data processing and not collect user information beyond what is necessary for saving to Notion and the optional AI chat feature.
 
-## Przetwarzane dane
+## Data we process
 
-### Przechowywane lokalnie (na Twoim urządzeniu)
+### Stored locally (on your device)
 
-- **Klucz API Notion** oraz **ID bazy Notion** – używane wyłącznie do wysyłania zapisanych stron do Twojej bazy Notion.
-- **Opcjonalnie:** klucz API do usługi AI (np. OpenRouter) – używany tylko do funkcji rozmowy z AI w rozszerzeniu.
-- Wszystkie te dane są przechowywane w **chrome.storage.local** i **nie są wysyłane na serwery twórców wtyczki**.
+- **Notion API key** and **Notion database ID** – used only to send saved pages to your Notion database.
+- **Optional:** AI service API key (e.g. OpenRouter) – used only for the in-extension AI chat feature.
+- All of this data is stored in **chrome.storage.local** and **is not sent to the extension developers’ servers**.
 
-### Wysyłane do zewnętrznych usług (przez Twoją przeglądarkę)
+### Sent to third-party services (by your browser)
 
-- **Notion (api.notion.com)** – gdy zapisujesz stronę, wtyczka wysyła do Notion: tytuł, adres URL, opis, tagi oraz ewentualne notatki/wyróżnienia. Dane trafiają wyłącznie do Twojej bazy Notion, do której dostęp masz dzięki podanemu kluczowi API.
-- **OpenRouter (openrouter.ai)** – tylko wtedy, gdy włączysz i użyjesz funkcji rozmowy z AI; wtedy treść wiadomości jest wysyłana do wybranej przez Ciebie usługi AI (zgodnie z polityką tej usługi).
+- **Notion (api.notion.com)** – when you save a page, the extension sends to Notion: title, URL, description, tags, and any notes or highlights. Data goes only to your Notion database, which you access with your API key.
+- **OpenRouter (openrouter.ai)** – only when you enable and use the AI chat feature; then message content is sent to your chosen AI provider (subject to that provider’s policy).
 
-## Czego wtyczka nie robi
+## What the extension does not do
 
-- **Nie zbiera** danych analitycznych ani statystyk o użytkowniku.
-- **Nie wysyła** żadnych danych na serwery twórców wtyczki.
-- **Nie śledzi** zachowania ani historii przeglądania poza akcjami wykonywanymi w samej wtyczce (np. zapis strony do Notion).
+- **Does not collect** analytics or user statistics.
+- **Does not send** any data to the extension developers’ servers.
+- **Does not track** browsing behaviour or history beyond actions you take in the extension (e.g. saving a page to Notion).
 
-## Jednoznaczny cel wtyczki
+## Single purpose of the extension
 
-Głównym celem wtyczki jest umożliwienie użytkownikowi **zapisywania linków i notatek do własnej bazy Notion** oraz opcjonalnie **korzystania z asystenta AI** w kontekście przeglądanej strony. Wszystkie dane są używane wyłącznie do realizacji tych funkcji.
+The extension’s main purpose is to let you **save links and notes to your own Notion database** and, optionally, **use an AI assistant** in the context of the page you are viewing. All data is used only for these features.
 
-## Kontakt
+## Contact
 
-W razie pytań dotyczących prywatności lub przetwarzania danych możesz skontaktować się przez repozytorium projektu: [https://github.com/Mysttic/save-link-to-notion](https://github.com/Mysttic/save-link-to-notion) (np. Issues).
+For questions about privacy or data processing, you can contact us via the project repository: [https://github.com/Mysttic/save-link-to-notion](https://github.com/Mysttic/save-link-to-notion) (e.g. Issues).
