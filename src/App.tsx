@@ -224,7 +224,7 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
   }
 
   return (
-    <div className="w-[350px] min-h-[400px] bg-neutral-900 text-white p-4 font-sans flex flex-col shadow-2xl overflow-hidden rounded-xl border border-neutral-700/50">
+    <div className="w-[350px] min-h-[400px] bg-neutral-900 text-white p-4 font-sans flex flex-col overflow-hidden">
       <header className="flex items-center justify-between mb-4 border-b border-neutral-800 pb-3">
         <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
           Save to Notion
