@@ -34,7 +34,7 @@ function Options() {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4">
+        <div className="min-h-screen bg-neutral-900 flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-xl p-8 bg-neutral-800 rounded-xl border border-neutral-700 shadow-2xl">
                 <h1 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Save to Notion – Settings</h1>
 
