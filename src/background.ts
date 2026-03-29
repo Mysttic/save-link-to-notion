@@ -20,15 +20,17 @@ chrome.runtime.onMessage.addListener((message: any, _sender: chrome.runtime.Mess
 
             try {
                 if (!navigator.onLine) {
-                    throw new Error('Offline');
+                    throw new Error('Offline - no internet connection');
                 }
                 const result = message.pageId
                     ? await updatePageToNotion(String(notionApiKey), message.pageId, message.data)
                     : await savePageToNotion(String(notionApiKey), String(notionDatabaseId), message.data);
-                console.log('Saved/Updated to Notion successfully', result);
+                console.log('[Save to Notion] Saved/Updated successfully', result);
                 sendResponse({ success: true, result });
             } catch (err: any) {
-                console.warn('Error saving to Notion, adding to offline queue', err);
+                console.error('[Save to Notion] ERROR saving to Notion:', err?.message || err);
+                console.error('[Save to Notion] Full error object:', JSON.stringify(err, Object.getOwnPropertyNames(err) as any));
+                console.error('[Save to Notion] Debug info — apiKey first6:', String(notionApiKey).substring(0, 6), '| dbId first6:', String(notionDatabaseId).substring(0, 6));
                 chrome.storage.local.get(['offlineQueue'], (qStore) => {
                     const queue: any[] = Array.isArray(qStore.offlineQueue) ? qStore.offlineQueue : [];
                     queue.push({
@@ -38,8 +40,9 @@ chrome.runtime.onMessage.addListener((message: any, _sender: chrome.runtime.Mess
                         timestamp: Date.now()
                     });
                     chrome.storage.local.set({ offlineQueue: queue });
+                    console.error('[Save to Notion] Added to offline queue. Queue size:', queue.length);
                 });
-                sendResponse({ success: true, queued: true, message: 'Added to offline queue' });
+                sendResponse({ success: false, queued: true, error: `Save failed: ${err?.message || 'Unknown error'}. Added to offline queue.` });
             }
         });
 

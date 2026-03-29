@@ -15,7 +15,6 @@ const buildProperties = (data: NotionPageData) => {
     const props: any = {
         "Title": { title: [{ text: { content: data.title || data.url } }] },
         "Link": { url: data.url },
-        "Status": { status: { name: "New" } }
     };
 
     if (data.description) {

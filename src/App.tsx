@@ -84,6 +84,7 @@ function App() {
         data: dataToSend,
         pageId: (!forceNew && syncedPageId) ? syncedPageId : undefined
       }, (response) => {
+        console.log('[App] SAVE_PAGE response:', response)
         if (response?.success) {
           setStatus('success')
           if (response?.result?.id) {
@@ -93,8 +94,10 @@ function App() {
           setTimeout(() => setStatus('idle'), 3000)
         } else {
           setStatus('error')
-          setErrorMsg(response?.error || 'Unknown Error')
-          setTimeout(() => setStatus('idle'), 4000)
+          const errMsg = response?.error || (response?.queued ? 'Saved to offline queue (check background console for details)' : 'Unknown Error')
+          setErrorMsg(errMsg)
+          console.error('[App] Save failed:', errMsg, '| full response:', response)
+          setTimeout(() => setStatus('idle'), 6000)
         }
       })
     } else {
