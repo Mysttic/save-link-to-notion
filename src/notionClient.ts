@@ -209,6 +209,91 @@ export const appendImageBlocks = async (
     return await response.json();
 };
 
+export interface SavedLinkItem {
+    pageId: string;
+    title: string;
+    url: string;
+    description: string;
+    createdTime: string;
+    notionUrl: string;
+}
+
+export interface FetchSavedLinksResult {
+    items: SavedLinkItem[];
+    nextCursor: string | null;
+    hasMore: boolean;
+}
+
+/**
+ * Fetches saved links from the Notion database.
+ * Results are sorted by created_time descending (newest first).
+ * Supports cursor-based pagination for lazy-loading and an optional search term
+ * that is matched against the Title property on the Notion side.
+ */
+export const fetchSavedLinks = async (
+    apiKey: string,
+    databaseId: string,
+    options: { startCursor?: string | null; pageSize?: number; search?: string } = {}
+): Promise<FetchSavedLinksResult> => {
+    const { startCursor, pageSize = 25, search } = options;
+    const queryUrl = `https://api.notion.com/v1/databases/${databaseId}/query`;
+
+    const body: any = {
+        page_size: pageSize,
+        sorts: [{ timestamp: 'created_time', direction: 'descending' }],
+    };
+
+    if (startCursor) {
+        body.start_cursor = startCursor;
+    }
+
+    if (search && search.trim()) {
+        body.filter = {
+            property: 'Title',
+            title: { contains: search.trim() }
+        };
+    }
+
+    const response = await fetch(queryUrl, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Notion-Version': NOTION_VER,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Notion API error fetching links: ${response.status} ${errorText}`);
+    }
+
+    const data = await response.json();
+
+    const items: SavedLinkItem[] = (data.results || []).map((page: any) => {
+        const title = page.properties?.Title?.title?.[0]?.plain_text
+            || page.properties?.Name?.title?.[0]?.plain_text
+            || '(untitled)';
+        const link = page.properties?.Link?.url || '';
+        const description = page.properties?.Description?.rich_text?.[0]?.plain_text || '';
+        return {
+            pageId: page.id,
+            title,
+            url: link,
+            description,
+            createdTime: page.created_time,
+            notionUrl: page.url || `https://www.notion.so/${String(page.id).replace(/-/g, '')}`,
+        };
+    });
+
+    return {
+        items,
+        nextCursor: data.next_cursor || null,
+        hasMore: !!data.has_more,
+    };
+};
+
 export const appendTextBlocks = async (
     apiKey: string,
     pageId: string,

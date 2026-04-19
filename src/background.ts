@@ -1,5 +1,8 @@
-import { savePageToNotion, updatePageToNotion, checkIfPageSaved, addCommentToPage, appendImageBlocks, appendTextBlocks } from './notionClient';
+import { savePageToNotion, updatePageToNotion, checkIfPageSaved, addCommentToPage, appendImageBlocks, appendTextBlocks, fetchSavedLinks } from './notionClient';
 import { askOpenAI } from './openAiClient';
+
+// How long (ms) the first-page cache of saved links is considered fresh.
+const SAVED_LINKS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Save Link to Notion: Extension Installed');
@@ -26,6 +29,8 @@ chrome.runtime.onMessage.addListener((message: any, _sender: chrome.runtime.Mess
                     ? await updatePageToNotion(String(notionApiKey), message.pageId, message.data)
                     : await savePageToNotion(String(notionApiKey), String(notionDatabaseId), message.data);
                 console.log('[Save to Notion] Saved/Updated successfully', result);
+                // Invalidate the saved-links cache so the "Saved" tab reflects new/updated entries
+                chrome.storage.local.remove('savedLinksCache');
                 sendResponse({ success: true, result });
             } catch (err: any) {
                 console.error('[Save to Notion] ERROR saving to Notion:', err?.message || err);
@@ -111,6 +116,55 @@ chrome.runtime.onMessage.addListener((message: any, _sender: chrome.runtime.Mess
             } catch (err: any) {
                 console.error('Error appending blocks', err);
                 sendResponse({ success: false, error: err.message });
+            }
+        });
+        return true;
+    } else if (message.type === 'FETCH_LINKS') {
+        // Expected payload: { type: 'FETCH_LINKS', startCursor?: string|null, search?: string, forceRefresh?: boolean }
+        const startCursor: string | null = message.startCursor || null;
+        const search: string = (message.search || '').trim();
+        const forceRefresh: boolean = !!message.forceRefresh;
+        const isFirstPage = !startCursor;
+        const isUnfiltered = search === '';
+
+        chrome.storage.local.get(['notionApiKey', 'notionDatabaseId', 'savedLinksCache'], async (store) => {
+            if (!store.notionApiKey || !store.notionDatabaseId) {
+                sendResponse({ success: false, error: 'Missing API key or Database ID in settings' });
+                return;
+            }
+
+            // Serve first unfiltered page from cache when fresh
+            if (isFirstPage && isUnfiltered && !forceRefresh) {
+                const cache = store.savedLinksCache as { timestamp?: number; items?: any[]; nextCursor?: string | null; hasMore?: boolean } | undefined;
+                if (cache && cache.timestamp && Date.now() - cache.timestamp < SAVED_LINKS_CACHE_TTL_MS) {
+                    sendResponse({ success: true, items: cache.items, nextCursor: cache.nextCursor, hasMore: cache.hasMore, fromCache: true });
+                    return;
+                }
+            }
+
+            try {
+                const result = await fetchSavedLinks(
+                    String(store.notionApiKey),
+                    String(store.notionDatabaseId),
+                    { startCursor, search, pageSize: 25 }
+                );
+
+                // Cache only the first unfiltered page
+                if (isFirstPage && isUnfiltered) {
+                    chrome.storage.local.set({
+                        savedLinksCache: {
+                            items: result.items,
+                            nextCursor: result.nextCursor,
+                            hasMore: result.hasMore,
+                            timestamp: Date.now()
+                        }
+                    });
+                }
+
+                sendResponse({ success: true, ...result, fromCache: false });
+            } catch (err: any) {
+                console.error('Error fetching saved links', err);
+                sendResponse({ success: false, error: err?.message || String(err) });
             }
         });
         return true;

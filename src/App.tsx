@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './index.css'
+
+type SavedLink = {
+  pageId: string
+  title: string
+  url: string
+  description: string
+  createdTime: string
+  notionUrl: string
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState('save')
@@ -17,6 +26,95 @@ function App() {
   const [chatMessages, setChatMessages] = useState<{ role: string, content: string }[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isChatLoading, setIsChatLoading] = useState(false)
+
+  // Saved Links State
+  const [savedLinks, setSavedLinks] = useState<SavedLink[]>([])
+  const [savedNextCursor, setSavedNextCursor] = useState<string | null>(null)
+  const [savedHasMore, setSavedHasMore] = useState(false)
+  const [savedLoading, setSavedLoading] = useState(false)
+  const [savedLoadingMore, setSavedLoadingMore] = useState(false)
+  const [savedError, setSavedError] = useState<string | null>(null)
+  const [savedSearch, setSavedSearch] = useState('')
+  const [savedLoaded, setSavedLoaded] = useState(false)
+
+  const loadSavedLinks = (opts: { append?: boolean; forceRefresh?: boolean } = {}) => {
+    if (typeof chrome === 'undefined' || !chrome.runtime) return
+
+    const append = !!opts.append
+    if (append) {
+      setSavedLoadingMore(true)
+    } else {
+      setSavedLoading(true)
+    }
+    setSavedError(null)
+
+    chrome.runtime.sendMessage(
+      {
+        type: 'FETCH_LINKS',
+        startCursor: append ? savedNextCursor : null,
+        forceRefresh: !!opts.forceRefresh,
+      },
+      (response) => {
+        setSavedLoading(false)
+        setSavedLoadingMore(false)
+        setSavedLoaded(true)
+        if (response?.success) {
+          const items: SavedLink[] = response.items || []
+          setSavedLinks((prev) => (append ? [...prev, ...items] : items))
+          setSavedNextCursor(response.nextCursor || null)
+          setSavedHasMore(!!response.hasMore)
+        } else {
+          setSavedError(response?.error || 'Failed to load saved links')
+          if (!append) setSavedLinks([])
+        }
+      }
+    )
+  }
+
+  // Load saved links the first time the user opens the "Saved" tab
+  useEffect(() => {
+    if (activeTab === 'saved' && !savedLoaded && !savedLoading) {
+      loadSavedLinks()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  // Client-side filtering for instant feedback while typing
+  const filteredSavedLinks = useMemo(() => {
+    const q = savedSearch.trim().toLowerCase()
+    if (!q) return savedLinks
+    return savedLinks.filter(
+      (l) => l.title.toLowerCase().includes(q) || l.url.toLowerCase().includes(q)
+    )
+  }, [savedLinks, savedSearch])
+
+  const openUrl = (url: string) => {
+    if (!url) return
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url })
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  const faviconFor = (url: string) => {
+    try {
+      const u = new URL(url)
+      return `https://www.google.com/s2/favicons?sz=32&domain=${u.hostname}`
+    } catch {
+      return ''
+    }
+  }
+
+  const formatDate = (iso: string) => {
+    if (!iso) return ''
+    try {
+      const d = new Date(iso)
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+    } catch {
+      return ''
+    }
+  }
 
   useEffect(() => {
     // Get active tab metadata
@@ -242,13 +340,19 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
 
       <div className="flex bg-neutral-800/80 rounded-lg p-1 mb-5 border border-neutral-700">
         <button
-          className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'save' ? 'bg-neutral-600/50 text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700/50'}`}
+          className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'save' ? 'bg-neutral-600/50 text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700/50'}`}
           onClick={() => setActiveTab('save')}
         >
           Save Link
         </button>
         <button
-          className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'ai' ? 'bg-blue-600/50 text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700/50'}`}
+          className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'saved' ? 'bg-emerald-600/50 text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700/50'}`}
+          onClick={() => setActiveTab('saved')}
+        >
+          Saved
+        </button>
+        <button
+          className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'ai' ? 'bg-blue-600/50 text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700/50'}`}
           onClick={() => setActiveTab('ai')}
         >
           Ask AI
@@ -256,7 +360,7 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
       </div>
 
       <div className="flex-1 flex flex-col relative">
-        {activeTab === 'save' ? (
+        {activeTab === 'save' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex-1 flex flex-col">
             <div className="mb-4">
               <label className="block text-xs font-semibold text-neutral-400 mb-1 uppercase tracking-wider">Page Title & URL</label>
@@ -314,7 +418,122 @@ Do not use <action> unless the user explicitly asks to "add/save to Notion". Whe
               </button>
             </div>
           </div>
-        ) : (
+        )}
+
+        {activeTab === 'saved' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex items-center gap-2 mb-3 shrink-0">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={savedSearch}
+                  onChange={(e) => setSavedSearch(e.target.value)}
+                  placeholder="Search title or URL..."
+                  className="w-full bg-neutral-800 border border-neutral-700 rounded-lg pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow"
+                />
+                <svg className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M11 19a8 8 0 110-16 8 8 0 010 16z" />
+                </svg>
+              </div>
+              <button
+                onClick={() => loadSavedLinks({ forceRefresh: true })}
+                disabled={savedLoading}
+                title="Refresh"
+                className="p-2 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors disabled:opacity-50"
+              >
+                <svg className={`w-4 h-4 ${savedLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582M20 20v-5h-.581M5.5 9A7.5 7.5 0 0118.36 7M18.5 15A7.5 7.5 0 015.64 17" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto -mr-1 pr-1">
+              {savedError && (
+                <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 text-xs text-red-300">
+                  {savedError}
+                </div>
+              )}
+
+              {!savedError && savedLoading && savedLinks.length === 0 && (
+                <div className="flex flex-col gap-2">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="bg-neutral-800/50 border border-neutral-700/50 rounded-lg p-3 animate-pulse">
+                      <div className="h-3 w-2/3 bg-neutral-700 rounded mb-2"></div>
+                      <div className="h-2 w-1/2 bg-neutral-700/70 rounded"></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!savedError && !savedLoading && filteredSavedLinks.length === 0 && (
+                <div className="text-center text-xs text-neutral-500 py-6">
+                  {savedSearch
+                    ? 'No saved links match your search.'
+                    : 'No links saved yet. Use the "Save Link" tab to add some.'}
+                </div>
+              )}
+
+              <ul className="flex flex-col gap-2">
+                {filteredSavedLinks.map((link) => {
+                  const fav = faviconFor(link.url)
+                  return (
+                    <li
+                      key={link.pageId}
+                      className="group bg-neutral-800/60 border border-neutral-700/70 rounded-lg p-2.5 hover:border-emerald-500/40 hover:bg-neutral-800 transition-colors"
+                    >
+                      <button
+                        onClick={() => openUrl(link.url)}
+                        className="w-full text-left flex items-start gap-2.5"
+                        title={link.url}
+                      >
+                        {fav ? (
+                          <img
+                            src={fav}
+                            alt=""
+                            className="w-4 h-4 mt-0.5 rounded-sm flex-shrink-0"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden' }}
+                          />
+                        ) : (
+                          <div className="w-4 h-4 mt-0.5 rounded-sm bg-neutral-700 flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-medium text-neutral-100 truncate group-hover:text-emerald-300">
+                            {link.title}
+                          </div>
+                          <div className="text-[11px] text-neutral-500 truncate">{link.url}</div>
+                          <div className="text-[10px] text-neutral-600 mt-0.5 uppercase tracking-wider">
+                            {formatDate(link.createdTime)}
+                          </div>
+                        </div>
+                      </button>
+                      <div className="flex justify-end mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => openUrl(link.notionUrl)}
+                          className="text-[10px] font-bold tracking-wider uppercase bg-neutral-900 border border-neutral-700 px-2 py-0.5 rounded text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors"
+                          title="Open in Notion"
+                        >
+                          Open in Notion
+                        </button>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+
+              {savedHasMore && !savedSearch && (
+                <button
+                  onClick={() => loadSavedLinks({ append: true })}
+                  disabled={savedLoadingMore}
+                  className="w-full mt-3 py-2 text-xs font-semibold text-neutral-300 bg-neutral-800 border border-neutral-700 rounded-lg hover:bg-neutral-700/80 hover:text-white transition-colors disabled:opacity-50"
+                >
+                  {savedLoadingMore ? 'Loading...' : 'Load more'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'ai' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex-1 flex flex-col h-full overflow-hidden">
             <div className="flex-1 bg-neutral-800/50 border border-neutral-700 rounded-lg p-3 overflow-y-auto mb-3 flex flex-col gap-3">
               <div className="text-sm text-neutral-300">
