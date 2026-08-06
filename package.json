@@ -1,7 +1,7 @@
 {
   "name": "save-link-to-notion",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Mysttic/save-link-to-notion.git"
@@ -13,7 +13,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "pack": "npm run build && node scripts/pack-for-store.mjs"
+    "pack": "npm run build && node scripts/pack-for-store.mjs",
+    "smoke": "node scripts/smoke-test.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.0",

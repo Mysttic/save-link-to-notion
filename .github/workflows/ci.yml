@@ -32,3 +32,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Smoke test the built service worker
+        run: npm run smoke

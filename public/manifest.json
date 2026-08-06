@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Save Link to Notion",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Save links, notes, and chat with AI about the current page directly to your Notion database.",
     "icons": {
         "16": "icon16.png",
