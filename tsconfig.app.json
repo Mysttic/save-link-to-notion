@@ -31,5 +31,10 @@
   },
   "include": [
     "src"
+  ],
+  /* Tests run under Vitest, which supplies its own globals and types. */
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
   ]
 }

@@ -25,25 +25,35 @@
         "activeTab",
         "storage",
         "scripting",
-        "alarms"
+        "alarms",
+        "contextMenus",
+        "favicon"
     ],
     "host_permissions": [
-        "*://api.notion.com/",
-        "<all_urls>"
+        "https://api.notion.com/*",
+        "https://openrouter.ai/*"
     ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'; base-uri 'none'; frame-ancestors 'none'"
+    },
+    "commands": {
+        "_execute_action": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+S",
+                "mac": "Command+Shift+S"
+            },
+            "description": "Open the Save to Notion popup"
+        },
+        "quick-save": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+D",
+                "mac": "Command+Shift+D"
+            },
+            "description": "Save the current page without opening the popup"
+        }
+    },
     "background": {
         "service_worker": "src/background.js",
         "type": "module"
-    },
-    "content_scripts": [
-        {
-            "matches": [
-                "<all_urls>"
-            ],
-            "js": [
-                "src/content.js"
-            ],
-            "run_at": "document_idle"
-        }
-    ]
+    }
 }

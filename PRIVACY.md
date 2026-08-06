@@ -16,8 +16,9 @@ The **Save Link to Notion** extension is designed to minimise data processing an
 
 ### Sent to third-party services (by your browser)
 
-- **Notion (api.notion.com)** – when you save a page, the extension sends to Notion: title, URL, description, tags, and any notes or highlights. Data goes only to your Notion database, which you access with your API key.
-- **OpenRouter (openrouter.ai)** – only when you enable and use the AI chat feature; then message content is sent to your chosen AI provider (subject to that provider’s policy).
+- **Notion (api.notion.com)** – when you save a page, the extension sends to Notion: title, URL, description, tags, and any notes or highlights. If you tick *Clip full article*, the readable text and images of that page are sent as well. Data goes only to your Notion database, which you access with your API key.
+- **OpenRouter (openrouter.ai)** – only when you use the AI chat or the *AI summarize* button; then the page title, URL, meta description, your selected text and your messages are sent to your chosen AI provider (subject to that provider’s policy).
+Site icons in the *Saved* list come from the browser's own favicon cache, so browsing your saved links sends nothing to any third party.
 
 ## What the extension does not do
 

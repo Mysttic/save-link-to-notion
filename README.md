@@ -4,9 +4,38 @@ A Chrome/Brave extension that lets you save links, notes, and chat with AI about
 
 ## Features
 
-- **Save Link** – Save the current page URL, title, description, and optional note to a Notion database. Optionally update an existing page if the URL was already saved.
-- **Ask AI** – Chat with an AI assistant (via OpenRouter) in the context of the current page. The agent can add images or generated text to the saved Notion page when you ask it to.
-- **Settings** – Configure your Notion API key, Database ID, and optional OpenRouter API key and model in the extension options.
+- **Save Link** – Save the current page URL, title, description, tags, selected text and an optional note to a Notion database. Re-saving a known URL updates the existing row instead of duplicating it.
+- **Clip full article** – Optionally append the readable body of the page to the Notion page as real blocks (headings, paragraphs, lists, quotes, code and images).
+- **Tags** – Pick from the multi-select options that already exist in your database, or type new ones.
+- **AI summarize** – Fill the note and suggest tags from the page content with one click.
+- **Ask AI** – Chat with an AI assistant (via OpenRouter) in the context of the current page. It can add images or generated text to the saved Notion page, but every write is confirmed by you first.
+- **Saved** – Browse, search (server-side, across the whole database) and reopen everything you saved.
+- **Quick save** – Right-click menu (page, link or selection) and a keyboard shortcut save without opening the popup.
+- **Offline queue** – Saves that fail because Notion is unreachable are retried automatically in the background.
+- **Settings** – Configure your Notion API key and Database ID, test the connection, or create a ready-made database in one click. OpenRouter key and model are optional.
+
+## Keyboard shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+Shift+S` (`Cmd+Shift+S`) | Open the popup |
+| `Ctrl+Shift+D` (`Cmd+Shift+D`) | Save the current page without opening the popup |
+
+Both can be remapped at `chrome://extensions/shortcuts`.
+
+## Permissions
+
+| Permission | Why |
+|---|---|
+| `activeTab` + `scripting` | Read title, description and selection from the tab you are on, only after you invoke the extension |
+| `storage` | Keep your API keys, settings and the offline queue on this device |
+| `alarms` | Retry queued saves in the background |
+| `contextMenus` | The right-click "Save to Notion" entries |
+| `favicon` | Show site icons in the Saved list from the browser's own cache, with no third-party requests |
+| `https://api.notion.com/*` | Talk to the Notion API |
+| `https://openrouter.ai/*` | Talk to your AI provider (only when you use AI features) |
+
+The extension has no access to pages you do not explicitly act on, and injects no content scripts.
 
 ## Screenshot
 
@@ -36,6 +65,8 @@ A Chrome/Brave extension that lets you save links, notes, and chat with AI about
 
 - **Run in dev mode:** `npm run dev`, then load the `dist` folder in `chrome://extensions/` (refresh after changes).
 - **Build:** `npm run build`
+- **Lint:** `npm run lint`
+- **Test:** `npm test` (unit tests live next to the source as `src/*.test.ts` and run under Vitest)
 - **Package for Chrome Web Store:** `npm run pack` – creates `save-link-to-notion.zip` for upload in the [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
 ## Notion Setup
@@ -66,34 +97,24 @@ Paste this ID into the extension's **Options** page.
 
 ---
 
-### 4. Required database structure
+### 4. Database structure
 
-The extension expects the following **property names and types** in your Notion database. Property names are case-sensitive.
+**The fastest route:** on the Options page, paste your API key and click *"or create a new database…"*. Pick a page the integration can access and the extension creates a database with the right schema and selects it for you.
 
-| Property name | Type | Required | Description |
+To use an existing database instead, the extension reads its schema and maps columns automatically — names do **not** have to match, so Notion's default `Name` title column works fine.
+
+| Role | Detected as | Required | Description |
 |---|---|:---:|---|
-| `Title` | Title (default) | ✅ | Page title |
-| `Link` | URL | ✅ | Page URL — also used to detect if a page was already saved |
-| `Description` | Text | ☐ | Page meta description or your note |
-| `Tags` | Multi-select | ☐ | Populated from the page's `og:type` meta tag |
-| `Highlights` | Text | ☐ | Selected text from the page |
-| `Session ID` | Text | ☐ | Internal identifier (optional, can be hidden) |
+| Title | the database's title column, any name | ✅ | Page title |
+| Link | a URL column named `Link`, otherwise the first URL column | ☐ | Page URL — also used to detect if a page was already saved |
+| Description | a text column named `Description`, otherwise the first text column | ☐ | Your note and the page meta description |
+| Tags | a multi-select column named `Tags`, otherwise the first multi-select | ☐ | Tags you pick plus the page's `og:type` |
+| Highlights | a text column named `Highlights` | ☐ | Text you selected on the page |
+| Session ID | a text column named `Session ID` | ☐ | Internal identifier (optional, can be hidden) |
 
-> **Only `Title` and `Link` are strictly required.** The remaining properties are sent only when data is available — if a property is missing from your database it will simply be skipped without causing an error.
+> Columns that do not exist are skipped instead of failing the save. Without a URL column the extension cannot tell whether a page was already saved, so it will always create a new row.
 
-#### Quick setup (copy-paste template)
-
-You can duplicate this example database into your workspace:  
-Create a new database and add the following properties:
-
-| Property | Notion type |
-|---|---|
-| Title | Title |
-| Link | URL |
-| Description | Text |
-| Tags | Multi-select |
-| Highlights | Text |
-| Session ID | Text |
+Use **Test connection** on the Options page to see exactly which column got mapped to which role.
 
 ---
 
