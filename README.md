@@ -67,7 +67,34 @@ The extension has no access to pages you do not explicitly act on, and injects n
 - **Build:** `npm run build`
 - **Lint:** `npm run lint`
 - **Test:** `npm test` (unit tests live next to the source as `src/*.test.ts` and run under Vitest)
+- **Smoke test:** `npm run smoke` – drives the built service worker in `dist/` against a fake Notion API. Run `npm run build` first.
 - **Package for Chrome Web Store:** `npm run pack` – creates `save-link-to-notion.zip` for upload in the [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+
+## Releases
+
+Changes are listed in **[CHANGELOG.md](CHANGELOG.md)**.
+
+The version lives in `public/manifest.json` and `package.json`, and the newest
+`CHANGELOG.md` section has to name the same one. `npm run release:check` verifies
+that, and the release workflow refuses to publish otherwise — a release whose
+notes describe a different version is worse than no release.
+
+Releasing:
+
+1. On `develop`, bump the version in `public/manifest.json` and `package.json`
+   and add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md`.
+2. Open a pull request into `master`. The **Release** workflow validates the
+   metadata, runs lint, types, tests and the smoke test, packs the extension and
+   attaches `save-link-to-notion-vX.Y.Z.zip` to the run — download it from the
+   workflow summary to test the exact artefact before merging.
+3. Merge. The same workflow tags `vX.Y.Z` and publishes a GitHub release with
+   that zip attached and the changelog section as the release notes.
+4. Upload the zip from the release in the
+   [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+   The submission answers are in [docs/store-listing.md](docs/store-listing.md).
+
+Reusing a version that is already tagged fails the workflow, so a release is
+never silently overwritten.
 
 ## Notion Setup
 
