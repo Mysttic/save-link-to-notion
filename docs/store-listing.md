@@ -86,6 +86,8 @@ No analytics, no tracking, no data sent to the developer. See `PRIVACY.md`.
 - [ ] `npm run lint`, `npm test`, `npm run smoke` all pass
 - [ ] `public/manifest.json` version is higher than the published one
 - [ ] `npm run pack` regenerated `save-link-to-notion.zip`
-- [ ] Screenshots still match the UI (the popup gained a Saved tab, tag picker
-      and clipping checkbox since 1.0.x)
+- [ ] Screenshots still match the UI. Regenerate with
+      `npm run build && node scripts/screenshots/capture.mjs`; upload the
+      `docs/screenshots/*-1280x800.png` files (Save tab, Saved list, AI approval
+      card, Options with detected column mapping).
 - [ ] Privacy policy URL still resolves

@@ -14,6 +14,9 @@ was missing next to other web clippers.
 
 ### Added
 
+- `VERSION.md` marking the current version. It has to agree with
+  `public/manifest.json`, `package.json` and this changelog —
+  `npm run release:check` verifies all four.
 - Save without opening the popup: right-click entries for the page, a link or
   the selected text, and a `Ctrl+Shift+D` shortcut. `Ctrl+Shift+S` opens the
   popup.

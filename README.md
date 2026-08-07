@@ -37,11 +37,16 @@ Both can be remapped at `chrome://extensions/shortcuts`.
 
 The extension has no access to pages you do not explicitly act on, and injects no content scripts.
 
-## Screenshot
+## Screenshots
 
-![Extension popup – Save Link and Ask AI tabs](docs/popup-screenshot.png)
+| Save Link | Saved | Ask AI |
+|---|---|---|
+| ![Save tab: title, highlight, tags and article clipping](docs/screenshots/save-tab.png) | ![Saved list with search](docs/screenshots/saved-list.png) | ![AI chat with the write-approval card](docs/screenshots/ai-approval.png) |
 
-*Popup: Save Link tab with page title, URL, optional note, and Save to Database button.*
+*Screenshots are generated from the built extension with sample data:
+`npm run build && node scripts/screenshots/capture.mjs`. The `-1280x800`
+variants in [docs/screenshots](docs/screenshots) are sized for the Chrome Web
+Store listing.*
 
 ## Installation
 
@@ -74,15 +79,16 @@ The extension has no access to pages you do not explicitly act on, and injects n
 
 Changes are listed in **[CHANGELOG.md](CHANGELOG.md)**.
 
-The version lives in `public/manifest.json` and `package.json`, and the newest
-`CHANGELOG.md` section has to name the same one. `npm run release:check` verifies
-that, and the release workflow refuses to publish otherwise — a release whose
-notes describe a different version is worse than no release.
+The current version is marked in **[VERSION.md](VERSION.md)**. It has to agree
+with `public/manifest.json`, `package.json` and the newest `CHANGELOG.md`
+section. `npm run release:check` verifies all four, and the release workflow
+refuses to publish otherwise — a release whose notes describe a different
+version is worse than no release.
 
 Releasing:
 
-1. On `develop`, bump the version in `public/manifest.json` and `package.json`
-   and add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md`.
+1. On `develop`, bump the version in `public/manifest.json`, `package.json` and
+   `VERSION.md`, and add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md`.
 2. Open a pull request into `master`. The **Release** workflow validates the
    metadata, runs lint, types, tests and the smoke test, packs the extension and
    attaches `save-link-to-notion-vX.Y.Z.zip` to the run — download it from the

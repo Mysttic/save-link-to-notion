@@ -2,10 +2,10 @@
 /**
  * Guards a release.
  *
- * package.json, public/manifest.json and the newest CHANGELOG entry all have to
- * name the same version, and that version has to be one Chrome will accept —
- * otherwise the store rejects the upload after the workflow has already run, or
- * the release notes describe something other than what shipped.
+ * package.json, public/manifest.json, VERSION.md and the newest CHANGELOG entry
+ * all have to name the same version, and that version has to be one Chrome will
+ * accept — otherwise the store rejects the upload after the workflow has already
+ * run, or the release notes describe something other than what shipped.
  *
  *   node scripts/check-release.mjs                    validate and report
  *   node scripts/check-release.mjs --version          print the version only
@@ -50,6 +50,7 @@ const latestChangelogEntry = (changelog) => {
 const pkg = readJson('package.json');
 const manifest = readJson('public/manifest.json');
 const entry = latestChangelogEntry(readFile('CHANGELOG.md'));
+const versionFile = readFile('VERSION.md').trim();
 
 const problems = [];
 
@@ -75,6 +76,12 @@ if (pkg.version !== manifest.version) {
     );
 }
 
+if (versionFile !== manifest.version) {
+    problems.push(
+        `VERSION.md says ${versionFile || '(empty)'} but public/manifest.json says ${manifest.version}.`
+    );
+}
+
 if (!isChromeVersion(manifest.version)) {
     problems.push(
         `"${manifest.version}" is not a version Chrome accepts (1-4 dot-separated integers, each 0-65535).`
@@ -84,8 +91,8 @@ if (!isChromeVersion(manifest.version)) {
 if (problems.length > 0) {
     console.error('Release check failed:');
     for (const problem of problems) console.error(`  - ${problem}`);
-    console.error('\nBump package.json and public/manifest.json together, and add a');
-    console.error('matching CHANGELOG.md section, before releasing.');
+    console.error('\nBump package.json, public/manifest.json and VERSION.md together,');
+    console.error('and add a matching CHANGELOG.md section, before releasing.');
     process.exit(1);
 }
 
