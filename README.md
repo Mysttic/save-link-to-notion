@@ -37,11 +37,16 @@ Both can be remapped at `chrome://extensions/shortcuts`.
 
 The extension has no access to pages you do not explicitly act on, and injects no content scripts.
 
-## Screenshot
+## Screenshots
 
-![Extension popup – Save Link and Ask AI tabs](docs/popup-screenshot.png)
+| Save Link | Saved | Ask AI |
+|---|---|---|
+| ![Save tab: title, highlight, tags and article clipping](docs/screenshots/save-tab.png) | ![Saved list with search](docs/screenshots/saved-list.png) | ![AI chat with the write-approval card](docs/screenshots/ai-approval.png) |
 
-*Popup: Save Link tab with page title, URL, optional note, and Save to Database button.*
+*Screenshots are generated from the built extension with sample data:
+`npm run build && node scripts/screenshots/capture.mjs`. The `-1280x800`
+variants in [docs/screenshots](docs/screenshots) are sized for the Chrome Web
+Store listing.*
 
 ## Installation
 
@@ -67,7 +72,35 @@ The extension has no access to pages you do not explicitly act on, and injects n
 - **Build:** `npm run build`
 - **Lint:** `npm run lint`
 - **Test:** `npm test` (unit tests live next to the source as `src/*.test.ts` and run under Vitest)
+- **Smoke test:** `npm run smoke` – drives the built service worker in `dist/` against a fake Notion API. Run `npm run build` first.
 - **Package for Chrome Web Store:** `npm run pack` – creates `save-link-to-notion.zip` for upload in the [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+
+## Releases
+
+Changes are listed in **[CHANGELOG.md](CHANGELOG.md)**.
+
+The current version is marked in **[VERSION.md](VERSION.md)**. It has to agree
+with `public/manifest.json`, `package.json` and the newest `CHANGELOG.md`
+section. `npm run release:check` verifies all four, and the release workflow
+refuses to publish otherwise — a release whose notes describe a different
+version is worse than no release.
+
+Releasing:
+
+1. On `develop`, bump the version in `public/manifest.json`, `package.json` and
+   `VERSION.md`, and add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md`.
+2. Open a pull request into `master`. The **Release** workflow validates the
+   metadata, runs lint, types, tests and the smoke test, packs the extension and
+   attaches `save-link-to-notion-vX.Y.Z.zip` to the run — download it from the
+   workflow summary to test the exact artefact before merging.
+3. Merge. The same workflow tags `vX.Y.Z` and publishes a GitHub release with
+   that zip attached and the changelog section as the release notes.
+4. Upload the zip from the release in the
+   [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+   The submission answers are in [docs/store-listing.md](docs/store-listing.md).
+
+Reusing a version that is already tagged fails the workflow, so a release is
+never silently overwritten.
 
 ## Notion Setup
 
