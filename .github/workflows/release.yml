@@ -79,6 +79,7 @@ jobs:
             save-link-to-notion-v${{ steps.meta.outputs.version }}.zip
             release-notes.md
           if-no-files-found: error
+          retention-days: 3
 
   release:
     name: Publish release
