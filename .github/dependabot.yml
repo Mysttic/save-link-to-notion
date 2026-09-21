@@ -1,7 +1,15 @@
 version: 2
+# Both ecosystems target `develop`, not the default branch. CI only runs for a
+# pull request from `develop` into `master`, so a bump opened straight against
+# `master` would be verified nowhere: green on the pull request (no job matches),
+# green on the push after the merge (the release guard skips an already-released
+# version), and first noticed when the next real release fails on `master`.
+# Routed through `develop`, every bump is verified by the develop -> master pull
+# request that precedes a release.
 updates:
   - package-ecosystem: npm
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -13,5 +21,6 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: monthly

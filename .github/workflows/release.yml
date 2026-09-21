@@ -1,106 +1,140 @@
 name: Release
 
-# A pull request into master builds the store package and attaches it to the run,
-# so the exact artefact can be tested before it is merged. Merging that pull
-# request publishes it as a GitHub release.
+# A push to master - in practice a merged pull request - validates the release
+# metadata, builds the store package and publishes it as a GitHub release. The
+# same thing can be started by hand from the Actions tab.
+#
+# Pull requests deliberately no longer build here. `ci.yml` already runs the same
+# sequence (npm ci, lint, tsc, test, build, smoke) on a pull request from
+# `develop` into `master`, so keeping a `pull_request` trigger here meant the
+# identical tree was verified twice before the merge and a third time after it.
+#
+# One job on purpose. GitHub bills each job by the started minute, and the old
+# split into `package` + `release` existed only so the zip could travel between
+# the two runners as a run artifact. The release carries that very zip, so the
+# artifact was a second copy nobody downloaded; it and the extra runner are gone.
 
 on:
-  pull_request:
-    branches: [master]
   push:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Publish even though this version is already tagged"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Deliberately false: a publication in flight is never cut short.
+  cancel-in-progress: false
+
 jobs:
-  package:
-    name: Verify and package
+  release:
+    name: Verify, package and publish
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.meta.outputs.version }}
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-        with:
-          # Full history so the tag check below can see existing tags.
-          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
+      # The version guard runs before `npm ci`, not after the build. Most pushes
+      # to master carry no version bump, and the old order discovered that only
+      # once install, lint, type check and pack had already been paid for.
+      # scripts/check-release.mjs reads package.json, public/manifest.json,
+      # VERSION.md and CHANGELOG.md through node:fs alone, so it needs no
+      # node_modules and answers in seconds on a bare checkout.
       - name: Check release metadata
         id: meta
         run: |
           npm run release:check
           echo "version=$(node scripts/check-release.mjs --version)" >> "$GITHUB_OUTPUT"
 
-      - name: Refuse to reuse a released version
+      - name: Is this version still unreleased?
+        id: guard
+        env:
+          # Empty for `push`; `workflow_dispatch` supplies true or false.
+          FORCE: ${{ inputs.force || 'false' }}
+          VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          version="${{ steps.meta.outputs.version }}"
-          if git rev-parse "v$version" >/dev/null 2>&1; then
-            echo "::error::v$version is already tagged. Bump the version and add a CHANGELOG entry."
-            exit 1
+          # `git ls-remote` asks the remote instead of the local clone, so the
+          # checkout above stays at its default single commit rather than
+          # fetching the entire history only to see the tags. Nothing else here
+          # wants that history: the release notes come out of CHANGELOG.md, not
+          # out of `git log`.
+          if [ "$FORCE" = "true" ]; then
+            echo "::notice::force requested - publishing v$VERSION without the tag check."
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          elif git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "::notice::v$VERSION is already tagged, so there is nothing to release. Bump the version and add a CHANGELOG entry, or start this workflow by hand with force."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Every step below repeats the guard, so a push to master that releases
+      # nothing skips all of them and finishes green in seconds - which is the
+      # whole point of asking first.
+      - name: Setup Node.js
+        if: steps.guard.outputs.proceed == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.guard.outputs.proceed == 'true'
+        run: npm ci
+
       - name: Lint
+        if: steps.guard.outputs.proceed == 'true'
         run: npm run lint
 
       - name: Type check
+        if: steps.guard.outputs.proceed == 'true'
         run: npx tsc -b
 
       - name: Test
+        if: steps.guard.outputs.proceed == 'true'
         run: npm test --if-present
 
       - name: Build and pack
+        if: steps.guard.outputs.proceed == 'true'
         run: npm run pack
 
       - name: Smoke test the built service worker
+        if: steps.guard.outputs.proceed == 'true'
         run: npm run smoke
 
       - name: Name the package after the version
+        if: steps.guard.outputs.proceed == 'true'
         run: mv save-link-to-notion.zip "save-link-to-notion-v${{ steps.meta.outputs.version }}.zip"
 
       - name: Write release notes
+        if: steps.guard.outputs.proceed == 'true'
         run: node scripts/check-release.mjs --notes-file release-notes.md
 
-      - name: Upload the store package
-        uses: actions/upload-artifact@v5
-        with:
-          name: save-link-to-notion-v${{ steps.meta.outputs.version }}
-          path: |
-            save-link-to-notion-v${{ steps.meta.outputs.version }}.zip
-            release-notes.md
-          if-no-files-found: error
-          retention-days: 3
-
-  release:
-    name: Publish release
-    needs: package
-    # Only once the change is actually on master.
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Download the store package
-        uses: actions/download-artifact@v5
-        with:
-          name: save-link-to-notion-v${{ needs.package.outputs.version }}
-
+      # The zip is still on this runner, so it goes straight into the release.
+      # No artifact upload any more: the release itself is the download.
       - name: Create the GitHub release
+        if: steps.guard.outputs.proceed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.package.outputs.version }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          # The guard lets a forced run through, so this step has to see `force`
+          # as well: `gh release create` refuses a tag that already exists, and
+          # a forced run is by definition re-publishing one. Dropping the old
+          # release and its tag first is what makes the documented escape hatch
+          # work instead of failing after the whole build has been paid for.
+          FORCE: ${{ inputs.force || 'false' }}
         run: |
+          if [ "$FORCE" = "true" ]; then
+            gh release delete "v$VERSION" --yes --cleanup-tag || true
+          fi
           gh release create "v$VERSION" \
             --title "v$VERSION" \
             --notes-file release-notes.md \
