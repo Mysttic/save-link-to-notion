@@ -71,7 +71,7 @@ Store listing.*
 - **Run in dev mode:** `npm run dev`, then load the `dist` folder in `chrome://extensions/` (refresh after changes).
 - **Build:** `npm run build`
 - **Lint:** `npm run lint`
-- **Test:** `npm test` (unit tests live next to the source as `src/*.test.ts` and run under Vitest)
+- **Unit tests:** `src/*.test.ts` are written for Vitest, but no runner is wired up yet — there is no `test` script and Vitest is not a dependency, so nothing executes them.
 - **Smoke test:** `npm run smoke` – drives the built service worker in `dist/` against a fake Notion API. Run `npm run build` first.
 - **Package for Chrome Web Store:** `npm run pack` – creates `save-link-to-notion.zip` for upload in the [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
@@ -89,18 +89,24 @@ Releasing:
 
 1. On `develop`, bump the version in `public/manifest.json`, `package.json` and
    `VERSION.md`, and add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md`.
-2. Open a pull request into `master`. The **Release** workflow validates the
-   metadata, runs lint, types, tests and the smoke test, packs the extension and
-   attaches `save-link-to-notion-vX.Y.Z.zip` to the run — download it from the
-   workflow summary to test the exact artefact before merging.
-3. Merge. The same workflow tags `vX.Y.Z` and publishes a GitHub release with
-   that zip attached and the changelog section as the release notes.
+2. Open a pull request into `master`. The **CI** workflow checks the release
+   metadata from step 1 (all four files agree and the version is not tagged yet)
+   and runs lint, types, the build and the smoke test on it. It starts only for
+   pull requests whose source branch is `develop` — nothing else is verified
+   here.
+3. Merge. The **Release** workflow validates the metadata, packs the extension,
+   tags `vX.Y.Z` and publishes a GitHub release with
+   `save-link-to-notion-vX.Y.Z.zip` attached and the changelog section as the
+   release notes. It can also be started by hand from the Actions tab.
 4. Upload the zip from the release in the
    [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole).
    The submission answers are in [docs/store-listing.md](docs/store-listing.md).
 
-Reusing a version that is already tagged fails the workflow, so a release is
-never silently overwritten.
+A version that is already tagged is caught on the pull request, where CI fails
+before the merge. After the merge the release workflow checks again before
+anything is installed or built, and skips the release rather than overwriting
+it. A deliberate re-release is still possible by starting the workflow by hand
+with **force**, which replaces the existing release and its tag.
 
 ## Notion Setup
 

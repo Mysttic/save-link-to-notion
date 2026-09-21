@@ -1,13 +1,46 @@
 name: CI
 
+# Verification runs for one case only: a pull request from `develop` into
+# `master`. Feature branches, `dependabot/*` branches and pushes start nothing,
+# because `release.yml` already re-ran the very same steps after the merge and
+# the account has no Actions minutes to spend checking the same tree twice.
+#
+# Accepted consequence: a pull request into `master` from any branch other than
+# `develop` starts no job at all, and GitHub reports that run as green - a
+# skipped job counts as a success. There is deliberately no unconditional gate
+# job to turn it red; a pull request that has not come through `develop` is
+# simply not verified here.
+
 on:
   pull_request:
-  push:
     branches: [master]
+    # A documentation-only change needs no lint, tsc, build or smoke run.
+    # `master` carries no branch protection, so `verify` is not a required
+    # check that a docs-only pull request could wait on forever.
+    #
+    # `**.md` and not `**/*.md`: in GitHub's filter patterns `**` matches zero or
+    # more of ANY character, so `**/*.md` still demands a literal `/` and would
+    # miss README.md, CHANGELOG.md, VERSION.md and PRIVACY.md in the repository
+    # root - the four markdown files this repository actually edits.
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # A newer push to the same pull request makes the running check obsolete.
+  cancel-in-progress: true
 
 jobs:
   verify:
+    # GitHub cannot filter on the SOURCE branch inside `on:` - `branches:`
+    # matches the base branch only. Limiting this to pull requests that come
+    # from `develop` therefore has to happen at job level. The
+    # `workflow_dispatch` arm is required: `github.head_ref` is empty for a
+    # manual run, so without it a manual run would do nothing.
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'develop'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -17,6 +50,28 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # The release gate belongs on the pull request, where a forgotten version
+      # bump costs one commit to fix. `release.yml` checks the same thing after
+      # the merge, but there an already-released version only makes the run skip
+      # its steps and finish green, so the mistake surfaces nowhere.
+      # scripts/check-release.mjs reads package.json, public/manifest.json,
+      # VERSION.md and CHANGELOG.md through node:fs alone - no node_modules, so
+      # this runs before `npm ci` and answers in about a second.
+      - name: Check release metadata
+        run: npm run release:check
+
+      - name: Is this version still unreleased?
+        run: |
+          # `git ls-remote` asks the remote rather than this single-commit
+          # checkout, so no tag history has to be fetched. Unlike the guard in
+          # `release.yml`, a hit is a hard failure: on a pull request the point
+          # is to be red before the merge, not to skip quietly after it.
+          VERSION="$(node scripts/check-release.mjs --version)"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "::error::v$VERSION is already tagged and released. Bump the version in package.json, public/manifest.json and VERSION.md, and add a CHANGELOG.md entry."
+            exit 1
+          fi
 
       - name: Install dependencies
         run: npm ci
